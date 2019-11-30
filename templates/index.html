@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+<head>
+<title>Pixel Sign</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jscolor/2.0.4/jscolor.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+<style>.pixel { background-color: #000; width:30px; height:30px; }
+</style>
+</head>
+<body>
+	<h1>Pixel Sign</h1>
+	<table><tbody>
+{% for row in matrix %}
+<tr>
+{% for col in row %}
+<td><button id="pixel-{{col}}" data-id="{{col}}" class="pixel" onclick="pixelUpdate({{col}});">&nbsp;</button></td>
+{% endfor %}
+</tr>
+{% endfor %}
+</tbody></table>
+<p>Choose color: <input type="button" id="colorselect" class="jscolor {valueElement:null,value:'000000',onFineChange:'setPixelColor(this)'}" onchange="setPixelColor(this.jscolor);" value="#000000">
+<button id="fillAll" onclick="fillAll()">Fill</button>
+<button id="rainbow" onclick="rainbow()">🌈</button>
+<button id="clearAll" onclick="clearAll()">Clear</button>
+<script>
+col = "000000";
+function rgb2hex(rgb) {
+    rgb = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+    function hex(x) { return ("0" + parseInt(x).toString(16)).slice(-2); }
+    return hex(rgb[1]) + hex(rgb[2]) + hex(rgb[3]);
+}
+function setPixelColor(){
+	col = rgb2hex( $("#colorselect").css("backgroundColor") );
+	$("#colorselect").val("#"+col);
+	console.log(col);
+}
+function clearAll(){
+	$("#colorselect").css("backgroundColor","#000000");
+	setPixelColor();
+	fillAll();
+}
+function fillAll(){
+	$.ajax({url: "/fill/"+col});
+	$(".pixel").css("backgroundColor", "#"+col);
+}
+function rainbow(){
+	$.ajax({url: "/rainbow"});
+}
+function pixelUpdate(id){
+	$.ajax({url: "/pixel/"+id+"/"+col});
+	$("#pixel-"+id).css("backgroundColor", "#"+col);
+}
+function redrawPixels(){
+	$.ajax({
+		url: '/pixels',
+		type: 'GET',
+		dataType: 'json',
+		success: function(data){
+			$.each(data, function(id,v){
+		          $("#pixel-"+id).css("backgroundColor", "#"+v);
+			});
+		}
+		});
+}
+$(document).ready(function(){
+    setInterval(redrawPixels, 1100);
+});
+</script>
+</body>
+</html>
